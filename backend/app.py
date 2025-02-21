@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 from database.db_setup import db, Transaction
-from fraud_detection.rule_based import detect_fraud  # Import the rule-based fraud detection function
+from fraud_detection.ml_model import predict_fraud
 
 app = Flask(__name__)
 
@@ -16,8 +16,7 @@ def detect_fraud_endpoint():
     data = request.get_json()
 
     try:
-        # Calculate fraud score using the rule-based approach
-        fraud_score = detect_fraud(data)  # Using the rule-based function to calculate fraud score
+        fraud_score = predict_fraud(data)  
 
         # Prepare transaction data to store in the database
         transaction = Transaction(
@@ -65,6 +64,52 @@ def clear_db():
         return jsonify({"message": "All transactions cleared successfully!"}), 200
     except Exception as e:
         return jsonify({"message": "Failed to clear database", "error": str(e)}), 400
+
+
+
+@app.route('/transactions', methods=['GET'])
+def get_transactions():
+    """
+    Fetch transactions from the database and return as JSON.
+    """
+    try:
+        # Fetch latest 50 transactions (modify as needed)
+        transactions = Transaction.query.order_by(Transaction.trans_date_trans_time.desc()).limit(50).all()
+        
+        # Convert transactions to a list of dictionaries
+        transactions_list = [
+            {
+                "trans_date_trans_time": t.trans_date_trans_time,
+                "cc_num": t.cc_num,
+                "merchant": t.merchant,
+                "category": t.category,
+                "amt": t.amt,
+                "first": t.first,
+                "last": t.last,
+                "gender": t.gender,
+                "street": t.street,
+                "city": t.city,
+                "state": t.state,
+                "zip": t.zip,
+                "lat": t.lat,
+                "long": t.long,
+                "city_pop": t.city_pop,
+                "job": t.job,
+                "dob": t.dob,
+                "trans_num": t.trans_num,
+                "unix_time": t.unix_time,
+                "merch_lat": t.merch_lat,
+                "merch_long": t.merch_long,
+                "fraud_score": t.fraud_score,
+                "is_fraud": t.is_fraud,
+            }
+            for t in transactions
+        ]
+
+        return jsonify({"transactions": transactions_list}), 200
+
+    except Exception as e:
+        return jsonify({"message": "Failed to fetch transactions", "error": str(e)}), 500
 
 
 # Create the tables in the database (if they don't exist)
