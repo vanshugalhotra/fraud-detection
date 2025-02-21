@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from database.db_setup import db, Transaction
+from fraud_detection.rule_based import detect_fraud  # Import the rule-based fraud detection function
 
 app = Flask(__name__)
 
@@ -11,10 +12,14 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 
 @app.route('/detect_fraud', methods=['POST'])
-def detect_fraud():
-    data = request.get_json() 
+def detect_fraud_endpoint():
+    data = request.get_json()
 
     try:
+        # Calculate fraud score using the rule-based approach
+        fraud_score = detect_fraud(data)  # Using the rule-based function to calculate fraud score
+
+        # Prepare transaction data to store in the database
         transaction = Transaction(
             trans_date_trans_time=data['trans_date_trans_time'],
             cc_num=data['cc_num'],
@@ -38,13 +43,15 @@ def detect_fraud():
             merch_lat=data['merch_lat'],
             merch_long=data['merch_long'],
             is_fraud=data['is_fraud'],
-            fraud_score=data['fraud_score']  # Add the fraud_score field
+            fraud_score=fraud_score  # Add the calculated fraud score
         )
 
-        db.session.add(transaction)  # Add the transaction object to the session
-        db.session.commit()  # Commit to save in the database
-        
-        return jsonify({"message": "Transaction received and added successfully!"}), 200
+        # Add the transaction object to the session and commit to save in the database
+        db.session.add(transaction)
+        db.session.commit()
+
+        return jsonify({"message": "Transaction received and added successfully!", "fraud_score": fraud_score}), 200
+
     except Exception as e:
         return jsonify({"message": "Failed to process transaction", "error": str(e)}), 400
 
