@@ -16,8 +16,9 @@ def detect_fraud_endpoint():
     data = request.get_json()
 
     try:
-        fraud_score = predict_fraud(data)  
-
+        fraud_result = predict_fraud(data)
+        fraud_score = float(fraud_result["fraud_score"])  # Convert to float
+        is_fraud = int(fraud_result["is_fraud"])  # Convert to int
         # Prepare transaction data to store in the database
         transaction = Transaction(
             trans_date_trans_time=data['trans_date_trans_time'],
@@ -41,7 +42,7 @@ def detect_fraud_endpoint():
             unix_time=data['unix_time'],
             merch_lat=data['merch_lat'],
             merch_long=data['merch_long'],
-            is_fraud=data['is_fraud'],
+            is_fraud=is_fraud,
             fraud_score=fraud_score  # Add the calculated fraud score
         )
 
