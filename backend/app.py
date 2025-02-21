@@ -47,6 +47,17 @@ def detect_fraud():
         return jsonify({"message": "Transaction received and added successfully!"}), 200
     except Exception as e:
         return jsonify({"message": "Failed to process transaction", "error": str(e)}), 400
+    
+@app.route('/clear_db', methods=['POST'])
+def clear_db():
+    try:
+        # Delete all transactions from the database
+        db.session.query(Transaction).delete()
+        db.session.commit()
+        return jsonify({"message": "All transactions cleared successfully!"}), 200
+    except Exception as e:
+        return jsonify({"message": "Failed to clear database", "error": str(e)}), 400
+
 
 # Create the tables in the database (if they don't exist)
 with app.app_context():
