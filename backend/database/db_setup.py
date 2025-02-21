@@ -27,7 +27,8 @@ class Transaction(db.Model):
     unix_time = db.Column(db.Integer, nullable=False)
     merch_lat = db.Column(db.Float, nullable=False)
     merch_long = db.Column(db.Float, nullable=False)
+    fraud_score = db.Column(db.Float, nullable=True)
     is_fraud = db.Column(db.Boolean, nullable=False)  # Fraud label (True/False)
 
     def __repr__(self):
-        return f"<Transaction {self.trans_num} - Fraud: {self.is_fraud}>"
+        return f"<Transaction {self.trans_num} - Fraud: {self.is_fraud}, Score: {self.fraud_score}>"

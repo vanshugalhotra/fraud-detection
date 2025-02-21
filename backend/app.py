@@ -12,10 +12,9 @@ db.init_app(app)
 
 @app.route('/detect_fraud', methods=['POST'])
 def detect_fraud():
-    data = request.get_json()  # Get JSON data from the request
+    data = request.get_json() 
 
     try:
-        # Create a new transaction object based on the received data
         transaction = Transaction(
             trans_date_trans_time=data['trans_date_trans_time'],
             cc_num=data['cc_num'],
@@ -38,7 +37,8 @@ def detect_fraud():
             unix_time=data['unix_time'],
             merch_lat=data['merch_lat'],
             merch_long=data['merch_long'],
-            is_fraud=data['is_fraud']
+            is_fraud=data['is_fraud'],
+            fraud_score=data['fraud_score']  # Add the fraud_score field
         )
 
         db.session.add(transaction)  # Add the transaction object to the session
@@ -47,6 +47,7 @@ def detect_fraud():
         return jsonify({"message": "Transaction received and added successfully!"}), 200
     except Exception as e:
         return jsonify({"message": "Failed to process transaction", "error": str(e)}), 400
+
     
 @app.route('/clear_db', methods=['POST'])
 def clear_db():
@@ -61,10 +62,11 @@ def clear_db():
 
 # Create the tables in the database (if they don't exist)
 with app.app_context():
+    print("Creating database......")
     db.create_all()  # Create tables if they don't exist
 
-# Run the Flask app on the default port (5000)
+
 if __name__ == '__main__':
-    app.run(debug=True)  # Starts Flask app in development mode, listening on port 5000
+    app.run(debug=True) 
 
 print("✅ Database setup complete!")

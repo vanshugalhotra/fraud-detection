@@ -6,18 +6,16 @@ from dotenv import load_dotenv
 from faker import Faker
 from datetime import datetime
 
-# Load environment variables from .env file
 load_dotenv()
 
-# Get configuration from environment variables
 transaction_limit = int(os.getenv("TRANSACTION_LIMIT", 50))  # Default 50 transactions
 time_limit = int(os.getenv("TIME_LIMIT", 60))  # Default 60 seconds
 api_url = os.getenv("API_URL", "http://localhost:5000/detect_fraud")
 
-# Initialize Faker instance
+
 fake = Faker()
 
-# Function to create a fake transaction
+fraud_score = random.uniform(0, 1)  # Random fraud score between 0 and 1
 def generate_fake_transaction():
     transaction = {
         "trans_date_trans_time": str(datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
@@ -39,9 +37,10 @@ def generate_fake_transaction():
         "dob": fake.date_of_birth(minimum_age=18, maximum_age=80).strftime("%Y-%m-%d"),
         "trans_num": fake.uuid4(),
         "unix_time": int(time.time()),
-        "merch_lat": float(fake.latitude()),  # Ensure it's a float
-        "merch_long": float(fake.longitude()),  # Ensure it's a float
+        "merch_lat": float(fake.latitude()),  
+        "merch_long": float(fake.longitude()),  
         "is_fraud": random.choice([True, False]),
+        "fraud_score": fraud_score  
     }
     return transaction
 
@@ -69,12 +68,11 @@ def start_simulation():
             print(f"Time limit of {time_limit} seconds reached!")
             break
         
-        transaction = generate_fake_transaction()  # Generate a fake transaction
-        send_transaction(transaction)  # Send the transaction to the API
+        transaction = generate_fake_transaction() 
+        send_transaction(transaction)  
         transactions_sent += 1
 
-        # Delay between transactions (randomized for variety)
-        time.sleep(random.uniform(1, 3))  # Random sleep between 1 and 3 seconds
+        time.sleep(random.uniform(1, 3))  
 
     print(f"Simulation complete! {transactions_sent} transactions sent.")
 
