@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 from faker import Faker
 from datetime import datetime
 
+speed = 2
+
 load_dotenv()
 
 transaction_limit = int(os.getenv("TRANSACTION_LIMIT", 50))  # Default 50 transactions
@@ -22,7 +24,7 @@ def generate_fake_transaction():
         "cc_num": str(random.randint(4000000000000000, 4999999999999999)),
         "merchant": fake.company(),
         "category": random.choice(["Online Shopping", "Groceries", "Electronics", "Clothing"]),
-        "amt": round(float(random.uniform(1, 5000)), 2),  # Ensure it's a float
+        "amt": round(float(random.uniform(1, 100000)), 2),  # Ensure it's a float
         "first": fake.first_name(),
         "last": fake.last_name(),
         "gender": random.choice(["M", "F"]),
@@ -32,15 +34,13 @@ def generate_fake_transaction():
         "zip": random.randint(10000, 99999),
         "lat": float(fake.latitude()),  # Ensure it's a float
         "long": float(fake.longitude()),  # Ensure it's a float
-        "city_pop": random.randint(1000, 1000000),
+        "city_pop": random.randint(1000, 10000000),
         "job": fake.job(),
         "dob": fake.date_of_birth(minimum_age=18, maximum_age=80).strftime("%Y-%m-%d"),
         "trans_num": fake.uuid4(),
         "unix_time": int(time.time()),
         "merch_lat": float(fake.latitude()),  
-        "merch_long": float(fake.longitude()),  
-        "is_fraud": random.choice([True, False]),
-        "fraud_score": fraud_score  
+        "merch_long": float(fake.longitude())
     }
     return transaction
 
@@ -72,7 +72,7 @@ def start_simulation():
         send_transaction(transaction)  
         transactions_sent += 1
 
-        time.sleep(random.uniform(1, 3))  
+        time.sleep(random.uniform(1, speed))  
 
     print(f"Simulation complete! {transactions_sent} transactions sent.")
 
