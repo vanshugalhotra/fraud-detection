@@ -1,81 +1,122 @@
-# 📘 *Model Interpretability in Real-Time Fraud Detection*
+# Real-Time Fraud Detection System
 
-## 🧠 *Understanding Model Interpretability*
-Model interpretability is the ability to explain or understand the decisions made by a machine learning model. In fraud detection, interpretability helps explain why a transaction is flagged as fraudulent, boosting stakeholder trust and aiding in compliance with regulations like PCI DSS.
+## 🚀 Tagline: "The Scam Stops Here – Be the Sherlock of Transactions"
 
-Two powerful techniques for interpretability are *SHAP* and *LIME*.
-
----
-
-## 🔍 *1. SHAP (SHapley Additive Explanations)*
-
-SHAP explains predictions by calculating the contribution of each feature using concepts from cooperative game theory. It provides global insights (model behavior) and local explanations (individual predictions).
-
-### ✅ *Why Use SHAP?*
-- *Global Interpretability:* Understand which features generally influence fraud.
-- *Local Interpretability:* Pinpoint why a specific transaction is flagged.
-- *Visualization:* Rich visualizations like summary plots and force plots.
-
-### ⚙ *Example Integration in Python:*
-python
-import shap
-explainer = shap.TreeExplainer(model)
-shap_values = explainer.shap_values(X_sample)
-
-# Summary plot
-shap.summary_plot(shap_values, X_sample)
-
-# Force plot for a single transaction
-shap.force_plot(explainer.expected_value, shap_values[0], X_sample.iloc[0])
-
-
-### 📊 *Output:*
-- *Summary Plot:* Shows feature importance across all samples.
-- *Force Plot:* Visualizes feature impact for an individual transaction.
+### 🏆 *Goal:*
+Build a system to detect fraudulent transactions in real-time, leveraging machine learning and interpretable AI techniques to provide precise and actionable insights.
 
 ---
 
-## 🟠 *2. LIME (Local Interpretable Model-agnostic Explanations)*
+FRAUD-DETECTION/
+├── backend/
+│   ├── database/
+│   │   ├── _pycache_/
+│   │   ├── db_setup.py
+│   │   ├── models.py
+│   │   └── transactions.db
+│   ├── fraud_detection/
+│   │   ├── _pycache_/
+│   │   ├── ml_model.py
+│   │   ├── rule_based.py
+│   │   └── instance/
+│   ├── model/
+│   │   ├── checkF1.py
+│   │   ├── evaluate_model.py
+│   │   ├── generate_model.py
+│   │   └── app.py
+│   ├── app.py
+│   └── config.py
+├── data/
+│   ├── fraud_detection_model/
+│   ├── fraud_model.pkl
+│   ├── fraud_transactions.json
+│   ├── fraud.json
+│   ├── fraudTest.csv
+│   ├── fraudTrain.csv
+│   ├── non_fraud_transactions/
+│   └── non_fraud.json
+├── model/
+│   ├── app.py
+│   ├── config.py
+│   ├── insert_historical_data.py
+│   ├── requirements.txt
+│   └── test.py
+└── README.md
 
-LIME explains predictions by perturbing input data and training a simple interpretable model (e.g., linear regression) to approximate local decision boundaries.
-
-### ✅ *Why Use LIME?*
-- *Model Agnostic:* Works with any black-box model.
-- *Local Interpretability:* Helps explain individual fraud predictions.
-
-### ⚙ *Example Integration in Python:*
-python
-from lime.lime_tabular import LimeTabularExplainer
-
-explainer = LimeTabularExplainer(X_train.values, feature_names=feature_names, class_names=['Not Fraud', 'Fraud'], discretize_continuous=True)
-
-exp = explainer.explain_instance(X_test.iloc[0].values, model.predict_proba)
-exp.show_in_notebook()
-
-
-### 📊 *Output:*
-- *HTML Visualization:* Shows feature contributions for a single prediction.
-- *Bar Charts:* Feature weights impacting the decision.
 
 ---
 
-## 🛠 *Best Practices for Interpretability*
-1. *Combine SHAP & LIME:* Use SHAP for global understanding and LIME for detailed, instance-level analysis.
-2. *Feature Engineering Awareness:* Document engineered features like distance, time gaps, or transaction flags.
-3. *Threshold Tuning:* Visualize feature importance to adjust decision thresholds for better precision/recall balance.
-
-## 📘 *Documentation Checklist:*
-- 📊 *Accuracy Metrics:* Precision, Recall, F1-Score.
-- 🛡 *Model Transparency:* Explainability through SHAP & LIME.
-- ⚡ *Real-Time Analysis:* Show live SHAP explanations on flagged transactions.
-- 📄 *Regulatory Compliance:* Explain interpretability for audits (e.g., PCI DSS).
+## ⚡ **Key Features:**
+- **Real-Time Anomaly Detection:** Process live transaction data and flag suspicious activities.
+- **ML Models:** Implemented models like Random Forest, XGBoost, and Logistic Regression.
+- **Model Interpretability:** Explainable AI with **SHAP** and **LIME**.
+- **Visualization:** Dynamic charts for live fraud alerts.
 
 ---
 
-## 📚 *References & Resources:*
-- *[SHAP Documentation](https://shap.readthedocs.io/)*
-- *[LIME Documentation](https://lime-ml.readthedocs.io/)*
-- *[Kaggle Credit Card Fraud Dataset](https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud)*
-- *[Stripe API Docs](https://stripe.com/docs/api)*
+## 🔧 **Installation:**
+1. Clone the repository:
+bash
+git clone https://github.com/your-repo/fraud-detection.git
+cd fraud-detection/backend/fraud_detection
 
-With SHAP and LIME, your fraud detection system won’t just catch fraud — it’ll explain exactly how and why it made that decision! 🚀 Let me know if you want me to refine or extend any section! ✨
+
+2. Install required packages:
+bash
+pip install -r requirements.txt
+
+
+3. Set up your data and model files in the `data/` directory.
+
+---
+
+## ⚙ **Usage:**
+
+### 🚨 **Run Real-Time Detection:**
+bash
+python live_detection.py
+
+
+### 🧠 **SHAP Explanation:**
+bash
+python shap_explain.py
+
+
+### 🟢 **LIME Explanation:**
+bash
+python lime_explain.py
+```
+
+---
+
+## 📊 *Model Interpretability:*
+
+### 🟠 *SHAP (SHapley Additive Explanations):*
+- *Global Interpretability:* Feature importance plots.
+- *Local Interpretability:* Force plots for single transactions.
+
+### 🟢 *LIME (Local Interpretable Model-Agnostic Explanations):*
+- Generates local explanations for specific instances.
+- Highlights the most influential features for a fraud prediction.
+
+---
+
+## 🏅 *Evaluation Metrics:*
+- *Accuracy*
+- *Precision / Recall*
+- *F1-Score*
+- *AUC-ROC Curve*
+
+---
+
+## 📚 *References:*
+- [Kaggle Credit Card Fraud Dataset](https://www.kaggle.com/datasets)
+- [PCI DSS Guidelines](https://www.pcisecuritystandards.org)
+- [Stripe API Docs](https://stripe.com/docs/api)
+
+---
+
+## 👩‍💻 *Contributing:*
+Feel free to fork this repository and submit a pull request. Let’s fight fraud together!
+
+---
