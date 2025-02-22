@@ -67,6 +67,20 @@ if not data.empty:
         # Append new transactions to session state
         st.session_state.transactions_data = pd.concat([st.session_state.transactions_data, new_transactions], ignore_index=True)
 
+        # Ensure 'trans_date_trans_time' is a datetime column
+        st.session_state.transactions_data['trans_date_trans_time'] = pd.to_datetime(
+            st.session_state.transactions_data['trans_date_trans_time'],
+            format='mixed',  # Handle mixed datetime formats
+            errors='coerce'  # Coerce invalid parsing to NaT (Not a Time)
+        )
+
+        # Drop rows where 'trans_date_trans_time' is NaT (invalid datetime values)
+        st.session_state.transactions_data = st.session_state.transactions_data.dropna(subset=['trans_date_trans_time'])
+
+        # Extract hour and day of the week
+        st.session_state.transactions_data['hour'] = st.session_state.transactions_data['trans_date_trans_time'].dt.hour
+        st.session_state.transactions_data['day_of_week'] = st.session_state.transactions_data['trans_date_trans_time'].dt.day_name()
+
         # Fraud Insights
         fraud_count = st.session_state.transactions_data[st.session_state.transactions_data["is_fraud"] == 1].shape[0]
         total_transactions = st.session_state.transactions_data.shape[0]
@@ -91,6 +105,9 @@ if not data.empty:
             </div>
         """, unsafe_allow_html=True)
 
+    
+        st.markdown("###")
+        st.markdown("###")
         # Layout: Table (left) & Radar (right)
         left_col, right_col = st.columns([2, 1])
 
@@ -224,7 +241,8 @@ if not data.empty:
             # Display the radar graph
             st_echarts(options=radar_options, height="400px", key="radar")
 
-            
+        st.markdown("###")
+        st.markdown("###")
         # Add two pie charts side by side
         st.markdown("### 📌 Pie Charts")
         col1, col2 = st.columns(2)
@@ -247,22 +265,57 @@ if not data.empty:
             category_pie_data = st.session_state.transactions_data["category"]
             fig_pie_category = px.pie(names=category_pie_data, hole=0.4, color=category_pie_data, template='plotly_dark')
             st.plotly_chart(fig_pie_category, use_container_width=True)
-            
-            
-        # Add a new line chart for total transaction amount over time
-        st.markdown("### 📈 Total Transaction Amount Over Time")
 
-        # Convert 'trans_date_trans_time' to datetime with mixed formats
-        st.session_state.transactions_data['trans_date_trans_time'] = pd.to_datetime(
-            st.session_state.transactions_data['trans_date_trans_time'],
-            format='mixed',  # Handle mixed datetime formats
-            dayfirst=True    # Ensure day is parsed first for dates like "31-01-2019"
+        st.markdown("###")
+        st.markdown("###")
+        # Heatmap for Transaction Frequency by Hour and Day
+        st.markdown("### 📊 Transaction Frequency by Hour and Day")
+
+        # Group data by day of the week and hour
+        heatmap_data = st.session_state.transactions_data.groupby(['day_of_week', 'hour']).size().reset_index(name="count")
+
+        # Pivot the data for the heatmap
+        heatmap_data = heatmap_data.pivot(index='day_of_week', columns='hour', values='count')
+
+        # Ensure the days of the week are ordered correctly
+        days_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+        heatmap_data = heatmap_data.reindex(days_order)
+
+        # Create the heatmap
+        fig_heatmap = px.imshow(
+            heatmap_data,
+            labels=dict(x="Hour of Day", y="Day of Week", color="Transaction Count"),
+            color_continuous_scale='Greens',  # Use a green color scale similar to GitHub
+            template='plotly_dark',
+            title="Transaction Frequency by Hour and Day"
         )
 
-        # Group by datetime and sum the transaction amounts
-        time_series_data = st.session_state.transactions_data.groupby('trans_date_trans_time')['amt'].sum().reset_index()
+        # Customize the layout
+        fig_heatmap.update_layout(
+            xaxis_title="Hour of Day",
+            yaxis_title="Day of Week",
+            xaxis_nticks=24,  # Show all 24 hours on the x-axis
+            yaxis_nticks=7,   # Show all 7 days on the y-axis
+            coloraxis_colorbar=dict(title="Transactions"),  # Add a color bar title
+            margin=dict(l=50, r=50, t=50, b=50),  # Adjust margins for a compact look
+            width=800,  # Set the width of the heatmap
+            height=500  # Set the height of the heatmap
+        )
 
-        # Create the line chart
+        # Add hover text for better interactivity
+        fig_heatmap.update_traces(
+            hovertemplate="<b>Day:</b> %{y}<br><b>Hour:</b> %{x}<br><b>Transactions:</b> %{z}<extra></extra>"
+        )
+
+        # Display the heatmap
+        st.plotly_chart(fig_heatmap, use_container_width=True)
+
+        st.markdown("###")
+        st.markdown("###")
+
+        # Add a new line chart for total transaction amount over time
+        st.markdown("### 📈 Total Transaction Amount Over Time")
+        time_series_data = st.session_state.transactions_data.groupby('trans_date_trans_time')['amt'].sum().reset_index()
         fig_line = px.line(
             time_series_data,
             x='trans_date_trans_time',
@@ -270,19 +323,24 @@ if not data.empty:
             title='Total Transaction Amount Over Time',
             template='plotly_dark'
         )
-
-        # Display the line chart
         st.plotly_chart(fig_line, use_container_width=True)
+
+
+        st.markdown("###")
 
         # Histogram for Transaction Amounts
         st.markdown("### 📊 Transaction Amount Distribution")
         fig_hist = px.histogram(st.session_state.transactions_data, x='amt', nbins=20, template='plotly_dark')
         st.plotly_chart(fig_hist, use_container_width=True)
 
+        st.markdown("###")
+
         # Scatter Plot for Transaction Amount vs Fraud Probability
         st.markdown("### 📊 Transaction Amount vs Fraud Probability")
         fig_scatter = px.scatter(st.session_state.transactions_data, x='amt', y='fraud_score', color='is_fraud', color_discrete_map={0: "green", 1: "red"}, template='plotly_dark')
         st.plotly_chart(fig_scatter, use_container_width=True)
+
+        st.markdown("###")
 
         # Map for Suspicious Transactions
         st.markdown("### 🗺️ Location of Suspicious Transactions")
