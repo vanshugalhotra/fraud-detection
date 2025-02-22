@@ -2,8 +2,8 @@ import os
 import requests
 import random
 import time
+import json
 from dotenv import load_dotenv
-from faker import Faker
 from datetime import datetime
 
 speed = 4
@@ -14,35 +14,27 @@ transaction_limit = int(os.getenv("TRANSACTION_LIMIT", 50))  # Default 50 transa
 time_limit = int(os.getenv("TIME_LIMIT", 60))  # Default 60 seconds
 api_url = os.getenv("API_URL", "http://localhost:5000/detect_fraud")
 
+# Load transaction data from JSON files
+with open("../data/fraud_transactions.json", "r") as f:
+    fraud_data = json.load(f)
 
-fake = Faker()
+with open("../data/non_fraud_transactions.json", "r") as f:
+    non_fraud_data = json.load(f)
 
-fraud_score = random.uniform(0, 1)  # Random fraud score between 0 and 1
-def generate_fake_transaction():
-    transaction = {
-        "trans_date_trans_time": str(datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
-        "cc_num": str(random.randint(4000000000000000, 4999999999999999)),
-        "merchant": fake.company(),
-        "category": random.choice(["Online Shopping", "Groceries", "Electronics", "Clothing"]),
-        "amt": round(float(random.uniform(1, 100000)), 2),  # Ensure it's a float
-        "first": fake.first_name(),
-        "last": fake.last_name(),
-        "gender": random.choice(["M", "F"]),
-        "street": fake.street_address(),
-        "city": fake.city(),
-        "state": fake.state(),
-        "zip": random.randint(10000, 99999),
-        "lat": float(fake.latitude()),  # Ensure it's a float
-        "long": float(fake.longitude()),  # Ensure it's a float
-        "city_pop": random.randint(1000, 10000000),
-        "job": fake.job(),
-        "dob": fake.date_of_birth(minimum_age=18, maximum_age=80).strftime("%Y-%m-%d"),
-        "trans_num": fake.uuid4(),
-        "unix_time": int(time.time()),
-        "merch_lat": float(fake.latitude()),  
-        "merch_long": float(fake.longitude())
-    }
-    return transaction
+# Combine and shuffle transactions
+all_transactions = fraud_data + non_fraud_data
+random.shuffle(all_transactions)
+
+# Ensure transactions are not repeated
+used_transactions = set()
+
+def get_unique_transaction():
+    while all_transactions:
+        transaction = all_transactions.pop()  # Get a random transaction
+        if transaction["trans_num"] not in used_transactions:
+            used_transactions.add(transaction["trans_num"])
+            return transaction
+    return None  # No transactions left
 
 # Function to send transaction data to the API
 def send_transaction(transaction):
@@ -68,11 +60,15 @@ def start_simulation():
             print(f"Time limit of {time_limit} seconds reached!")
             break
         
-        transaction = generate_fake_transaction() 
-        send_transaction(transaction)  
+        transaction = get_unique_transaction()
+        if transaction is None:
+            print("No more unique transactions available!")
+            break
+
+        send_transaction(transaction)
         transactions_sent += 1
 
-        time.sleep(random.uniform(1, speed))  
+        time.sleep(random.uniform(1, speed))
 
     print(f"Simulation complete! {transactions_sent} transactions sent.")
 
