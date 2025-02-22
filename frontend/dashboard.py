@@ -224,16 +224,54 @@ if not data.empty:
             # Display the radar graph
             st_echarts(options=radar_options, height="400px", key="radar")
 
-        # Move the Pie Chart below the radar
-        st.markdown("### 📌 Fraud vs Legit Transactions")
-        fraud_pie_data = st.session_state.transactions_data["is_fraud"].replace({0: "Legit", 1: "Fraud"})
-        fig_pie = px.pie(names=fraud_pie_data, hole=0.4, color=fraud_pie_data, color_discrete_map={"Fraud": "red", "Legit": "green"}, template='plotly_dark')
-        st.plotly_chart(fig_pie, use_container_width=True)
+            
+        # Add two pie charts side by side
+        st.markdown("### 📌 Pie Charts")
+        col1, col2 = st.columns(2)
 
-        # Time-Series Line Chart for Transaction Amounts
-        st.markdown("### 📈 Transaction Amount Over Time")
-        st.session_state.transactions_data['trans_date_trans_time'] = pd.to_datetime(st.session_state.transactions_data['trans_date_trans_time'])
-        fig_line = px.line(st.session_state.transactions_data, x='trans_date_trans_time', y='amt', color='category', template='plotly_dark')
+        # Fraud vs Legit Transactions Pie Chart
+        with col1:
+            st.markdown("#### Fraud vs Legit Transactions")  # Title for the first pie chart
+            fraud_pie_data = st.session_state.transactions_data["is_fraud"].replace({0: "Legit", 1: "Fraud"})
+            fig_pie_fraud = px.pie(names=fraud_pie_data, hole=0.4, color=fraud_pie_data, color_discrete_map={"Fraud": "red", "Legit": "green"}, template='plotly_dark')
+            st.plotly_chart(fig_pie_fraud, use_container_width=True)
+
+        # Transaction Categories Pie Chart
+        with col2:
+            # Use HTML/CSS to center the title
+            st.markdown("""
+                <div style='text-align: center;'>
+                    <h4>Transaction Categories</h4>
+                </div>
+            """, unsafe_allow_html=True)  # Title for the second pie chart
+            category_pie_data = st.session_state.transactions_data["category"]
+            fig_pie_category = px.pie(names=category_pie_data, hole=0.4, color=category_pie_data, template='plotly_dark')
+            st.plotly_chart(fig_pie_category, use_container_width=True)
+            
+            
+        # Add a new line chart for total transaction amount over time
+        st.markdown("### 📈 Total Transaction Amount Over Time")
+
+        # Convert 'trans_date_trans_time' to datetime with mixed formats
+        st.session_state.transactions_data['trans_date_trans_time'] = pd.to_datetime(
+            st.session_state.transactions_data['trans_date_trans_time'],
+            format='mixed',  # Handle mixed datetime formats
+            dayfirst=True    # Ensure day is parsed first for dates like "31-01-2019"
+        )
+
+        # Group by datetime and sum the transaction amounts
+        time_series_data = st.session_state.transactions_data.groupby('trans_date_trans_time')['amt'].sum().reset_index()
+
+        # Create the line chart
+        fig_line = px.line(
+            time_series_data,
+            x='trans_date_trans_time',
+            y='amt',
+            title='Total Transaction Amount Over Time',
+            template='plotly_dark'
+        )
+
+        # Display the line chart
         st.plotly_chart(fig_line, use_container_width=True)
 
         # Histogram for Transaction Amounts
