@@ -33,7 +33,7 @@ if 'scan_data' not in st.session_state:
         "pulses": [],  # Stores pulses for transactions
         "current_angle": 0  # Current scanning angle
     }
-
+    
 # Function to Fetch Live Transactions
 def fetch_live_transactions():
     try:

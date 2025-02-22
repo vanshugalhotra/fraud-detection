@@ -75,7 +75,7 @@ def get_transactions():
     """
     try:
         # Fetch latest 50 transactions (modify as needed)
-        transactions = Transaction.query.order_by(Transaction.trans_date_trans_time.desc()).limit(50).all()
+        transactions = Transaction.query.order_by(Transaction.trans_date_trans_time.desc()).limit(1000).all()
         
         # Convert transactions to a list of dictionaries
         transactions_list = [
