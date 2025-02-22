@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from faker import Faker
 from datetime import datetime
 
-speed = 2
+speed = 4
 
 load_dotenv()
 

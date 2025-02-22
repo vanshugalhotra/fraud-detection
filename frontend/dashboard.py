@@ -2,8 +2,10 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import requests
+import random
 from streamlit_autorefresh import st_autorefresh
 from datetime import datetime
+from streamlit_echarts import st_echarts  # Ensure this is installed
 
 # Set Streamlit Theme to Dark Mode
 st.set_page_config(page_title='FRAUD DETECTION SYSTEM', layout='wide', page_icon='🔍')
@@ -23,6 +25,14 @@ st_autorefresh(interval=1000)
 # Initialize session state for transactions data
 if 'transactions_data' not in st.session_state:
     st.session_state.transactions_data = pd.DataFrame()
+
+# Initialize session state for radar scan data
+if 'scan_data' not in st.session_state:
+    st.session_state.scan_data = {
+        "angles": [i * (360 / 8) for i in range(8)],  # 8 angles for the radar
+        "pulses": [],  # Stores pulses for transactions
+        "current_angle": 0  # Current scanning angle
+    }
 
 # Function to Fetch Live Transactions
 def fetch_live_transactions():
@@ -81,21 +91,144 @@ if not data.empty:
             </div>
         """, unsafe_allow_html=True)
 
-        # Layout: Table (left) & Pie Chart (right)
+        # Layout: Table (left) & Radar (right)
         left_col, right_col = st.columns([2, 1])
 
         with left_col:
             st.markdown("### 📊 Live Transaction Data")
-            display_data = st.session_state.transactions_data.iloc[::-1][["first", "last", "state", "amt", "category", "fraud_score"]]
+            display_data = st.session_state.transactions_data.iloc[::-1][["first", "last", "state", "amt", "category", "fraud_score", "is_fraud"]]
             display_data.rename(columns={"first": "Name", "last": "Last Name", "amt": "Amount", "category": "Category", "fraud_score": "Fraud Probability (%)"}, inplace=True)
             display_data["Fraud Probability (%)"] = (display_data["Fraud Probability (%)"] * 100).round(2).astype(str) + "%"
-            st.dataframe(display_data, width=800, height=400)
+
+            # Function to highlight fraud transactions
+            def highlight_fraud(row):
+                if row["is_fraud"] == 1:
+                    return ['background-color: #ff9999; color: black'] * len(row)  # Light red for fraud
+                else:
+                    return ['background-color: #ccffcc; color: black'] * len(row)  # Light green for non-fraud
+
+            # Apply styling
+            styled_data = display_data.style.apply(highlight_fraud, axis=1)
+
+            # Drop the 'is_fraud' column before displaying the table
+            styled_data = styled_data.hide(axis="index").hide(axis="columns", subset=["is_fraud"])
+
+            # Display Styled Table
+            st.dataframe(
+                styled_data,
+                width=800,
+                height=400,
+                use_container_width=True
+            )
 
         with right_col:
-            st.markdown("### 📌 Fraud vs Legit Transactions")
-            fraud_pie_data = st.session_state.transactions_data["is_fraud"].replace({0: "Legit", 1: "Fraud"})
-            fig_pie = px.pie(names=fraud_pie_data, hole=0.4, color=fraud_pie_data, color_discrete_map={"Fraud": "red", "Legit": "green"}, template='plotly_dark')
-            st.plotly_chart(fig_pie, use_container_width=True)
+            st.markdown("### 📡 Transaction Scanning Radar")
+
+            # Update radar data with new transactions
+            for _, row in new_transactions.iterrows():
+                # Add a pulse for the new transaction
+                st.session_state.scan_data['pulses'].append({
+                    "radius": row['amt'],  # Use transaction amount as radius
+                    "fraud": row['is_fraud'],  # Fraud status (0 or 1)
+                    "angle": st.session_state.scan_data['current_angle'],  # Current scanning angle
+                    "timestamp": datetime.now().strftime("%H:%M:%S.%f")[:-3]  # Timestamp
+                })
+
+                # Update scanning angle
+                st.session_state.scan_data['current_angle'] = (st.session_state.scan_data['current_angle'] + 10) % 360
+
+            # Keep only the last 15 pulses
+            st.session_state.scan_data['pulses'] = st.session_state.scan_data['pulses'][-15:]
+
+            # Radar Graph Configuration
+            radar_options = {
+                "backgroundColor": "#1e1e1e",  # Dark background
+                "polar": {
+                    "center": ["50%", "50%"],  # Center the radar
+                    "radius": "80%"  # Radius of the radar
+                },
+                "angleAxis": {
+                    "show": False,  # Hide angle axis labels
+                    "min": 0,
+                    "max": 360,
+                    "startAngle": st.session_state.scan_data['current_angle']  # Start angle for rotation
+                },
+                "radiusAxis": {
+                    "show": False,  # Hide radius axis labels
+                    "min": 0,
+                    "max": 250  # Maximum radius value
+                },
+                "series": [
+                    # Base radar grid
+                    {
+                        "type": "line",
+                        "data": [[200, angle] for angle in st.session_state.scan_data['angles']],  # Grid lines
+                        "coordinateSystem": "polar",
+                        "lineStyle": {
+                            "color": "#00ffaa33",  # Light green grid lines
+                            "width": 1
+                        },
+                        "symbol": "none"  # No symbols on grid lines
+                    },
+                    # Scanning line
+                    {
+                        "type": "line",
+                        "coordinateSystem": "polar",
+                        "data": [
+                            [0, st.session_state.scan_data['current_angle']],  # Start of scanning line
+                            [250, st.session_state.scan_data['current_angle']]  # End of scanning line
+                        ],
+                        "lineStyle": {
+                            "color": "#00ffaa",  # Bright green scanning line
+                            "width": 2
+                        },
+                        "animationDuration": 0  # No animation for scanning line
+                    },
+                    # Transaction pulses
+                    {
+                        "type": "effectScatter",
+                        "coordinateSystem": "polar",
+                        "data": [
+                            {
+                                "value": [pulse['radius'], pulse['angle']],  # Pulse position
+                                "symbolSize": pulse['radius'] / 2,  # Pulse size based on transaction amount
+                                "itemStyle": {
+                                    "color": {
+                                        "type": "radial",  # Radial gradient for pulses
+                                        "x": 0.5,
+                                        "y": 0.5,
+                                        "r": 0.5,
+                                        "colorStops": [
+                                            {
+                                                "offset": 0,
+                                                "color": "#ff0055" if pulse['fraud'] == 1 else "#00ffaa"  # Red for fraud, green for legit
+                                            },
+                                            {
+                                                "offset": 1,
+                                                "color": "#ff005500" if pulse['fraud'] == 1 else "#00ffaa00"  # Transparent outer edge
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                            for pulse in st.session_state.scan_data['pulses']  # Loop through pulses
+                        ],
+                        "rippleEffect": {
+                            "brushType": "stroke",  # Ripple effect type
+                            "scale": 4  # Ripple scale
+                        }
+                    }
+                ]
+            }
+
+            # Display the radar graph
+            st_echarts(options=radar_options, height="400px", key="radar")
+
+        # Move the Pie Chart below the radar
+        st.markdown("### 📌 Fraud vs Legit Transactions")
+        fraud_pie_data = st.session_state.transactions_data["is_fraud"].replace({0: "Legit", 1: "Fraud"})
+        fig_pie = px.pie(names=fraud_pie_data, hole=0.4, color=fraud_pie_data, color_discrete_map={"Fraud": "red", "Legit": "green"}, template='plotly_dark')
+        st.plotly_chart(fig_pie, use_container_width=True)
 
         # Time-Series Line Chart for Transaction Amounts
         st.markdown("### 📈 Transaction Amount Over Time")
