@@ -7,41 +7,8 @@ Build a system to detect fraudulent transactions in real-time, leveraging machin
 
 ---
 
-FRAUD-DETECTION/
-├── backend/
-│   ├── database/
-│   │   ├── _pycache_/
-│   │   ├── db_setup.py
-│   │   ├── models.py
-│   │   └── transactions.db
-│   ├── fraud_detection/
-│   │   ├── _pycache_/
-│   │   ├── ml_model.py
-│   │   ├── rule_based.py
-│   │   └── instance/
-│   ├── model/
-│   │   ├── checkF1.py
-│   │   ├── evaluate_model.py
-│   │   ├── generate_model.py
-│   │   └── app.py
-│   ├── app.py
-│   └── config.py
-├── data/
-│   ├── fraud_detection_model/
-│   ├── fraud_model.pkl
-│   ├── fraud_transactions.json
-│   ├── fraud.json
-│   ├── fraudTest.csv
-│   ├── fraudTrain.csv
-│   ├── non_fraud_transactions/
-│   └── non_fraud.json
-├── model/
-│   ├── app.py
-│   ├── config.py
-│   ├── insert_historical_data.py
-│   ├── requirements.txt
-│   └── test.py
-└── README.md
+![Project Structure](https://raw.githubusercontent.com/vanshugalhotra/fraud-detection/main/structure.png)
+
 
 
 ---
@@ -57,12 +24,13 @@ FRAUD-DETECTION/
 ## 🔧 **Installation:**
 1. Clone the repository:
 bash
-git clone https://github.com/your-repo/fraud-detection.git
-cd fraud-detection/backend/fraud_detection
+https://github.com/vanshugalhotra/fraud-detection
+
+    - execute ```setup.sh```
 
 
 2. Install required packages:
-bash
+
 pip install -r requirements.txt
 
 
@@ -78,12 +46,12 @@ python live_detection.py
 
 
 ### 🧠 **SHAP Explanation:**
-bash
+```
 python shap_explain.py
-
+```
 
 ### 🟢 **LIME Explanation:**
-bash
+```
 python lime_explain.py
 ```
 
@@ -94,6 +62,9 @@ python lime_explain.py
 ### 🟠 *SHAP (SHapley Additive Explanations):*
 - *Global Interpretability:* Feature importance plots.
 - *Local Interpretability:* Force plots for single transactions.
+
+## SHAP Analysis
+![SHAP Analysis](https://raw.githubusercontent.com/vanshugalhotra/fraud-detection/main/shap.png)
 
 ### 🟢 *LIME (Local Interpretable Model-Agnostic Explanations):*
 - Generates local explanations for specific instances.
