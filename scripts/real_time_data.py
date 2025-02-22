@@ -6,7 +6,7 @@ import json
 from dotenv import load_dotenv
 from datetime import datetime
 
-speed = 4
+speed = 3
 
 load_dotenv()
 

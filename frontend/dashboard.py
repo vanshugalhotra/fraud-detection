@@ -5,33 +5,31 @@ import requests
 import random
 from streamlit_autorefresh import st_autorefresh
 from datetime import datetime
-from streamlit_echarts import st_echarts  # Ensure this is installed
+from streamlit_echarts import st_echarts 
 
-# Set Streamlit Theme to Dark Mode
 st.set_page_config(page_title='FRAUD DETECTION SYSTEM', layout='wide', page_icon='🔍')
 
-# Title
+
+st.markdown("### Team: Ustaad JI")
 st.markdown("""
     <h1 style='text-align: center;'>🔍 REAL-TIME FRAUD DETECTION DASHBOARD </h1>
     <p style='text-align: center; font-size: 24px;'>“The Scam Stops Here – Be the Sherlock of Transactions”.</p>
 """, unsafe_allow_html=True)
 
-# API URL
+
 API_URL = "http://127.0.0.1:5000/transactions"
 
-# Auto-refresh every 1 second
 st_autorefresh(interval=1000)
 
-# Initialize session state for transactions data
 if 'transactions_data' not in st.session_state:
     st.session_state.transactions_data = pd.DataFrame()
 
-# Initialize session state for radar scan data
+
 if 'scan_data' not in st.session_state:
     st.session_state.scan_data = {
-        "angles": [i * (360 / 8) for i in range(8)],  # 8 angles for the radar
-        "pulses": [],  # Stores pulses for transactions
-        "current_angle": 0  # Current scanning angle
+        "angles": [i * (360 / 8) for i in range(8)],  
+        "pulses": [],  
+        "current_angle": 0  
     }
     
 # Function to Fetch Live Transactions

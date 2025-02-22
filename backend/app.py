@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from database.db_setup import db, Transaction
 from fraud_detection.ml_model import predict_fraud
+import traceback
 
 app = Flask(__name__)
 
@@ -53,7 +54,13 @@ def detect_fraud_endpoint():
         return jsonify({"message": "Transaction received and added successfully!", "fraud_score": fraud_score}), 200
 
     except Exception as e:
-        return jsonify({"message": "Failed to process transaction", "error": str(e)}), 400
+        # Capture the full traceback
+        error_traceback = traceback.format_exc()
+        return jsonify({
+            "message": "Failed to process transaction",
+            "error": str(e),
+            "traceback": error_traceback  # Include the full traceback in the response
+        }), 400
 
     
 @app.route('/clear_db', methods=['POST'])
